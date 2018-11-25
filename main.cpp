@@ -8,25 +8,29 @@ using namespace std;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-int L = 3;
+int L = 5;
 
-int numTrained = 60;
+int numTrained = 100;
 
-int numInput = 150;
+int numInput = 500;
 
-int N[]={4,5,3};
+int N[]={20,10,5,3,1};
 
 double w[20][1000][1000];
 
 double b[20][1000];
 
-double a[20][1000][150];
+double a[20][1000][500];
 
-double Z[20][1000][150];
+double Z[20][1000][500];
 
-double type[150][3];
+double depth[500];
 
-string predict[150];
+double duration[500];
+
+double location[500];
+
+string predict[500];
 
 double S(double i){
     double out;
@@ -61,31 +65,24 @@ void activationLoop(int i){
 void getInput(){
 
     ifstream inputFile;
-    inputFile.open(R"(C:\Users\User\CLionProjects\Iris-Flower\Iris.txt)");
+    inputFile.open(R"(C:\Users\User\CLionProjects\Exoplanet\sample.txt)");
 
     while (inputFile.good()and !inputFile.eof()){
-        for (int i=0; i<150; ++i) {
+        for (int i=0; i<numInput; ++i) {
             for (int n = 0; n < N[0]; ++n) {
                 string in;
                 getline(inputFile, in, ',');
                 a[0][n][i]=stod(in);
             }
-            string ft;
-            getline(inputFile, ft, '\n');
-
-            if (ft=="setosa"){
-                type[i][0]=1;
-                type[i][1]=0;
-                type[i][2]=0;
-            }else if (ft=="versicolor"){
-                type[i][0]=0;
-                type[i][1]=1;
-                type[i][2]=0;
-            }else if (ft=="virginica"){
-                type[i][0]=0;
-                type[i][1]=0;
-                type[i][2]=1;
-            }
+            string dep;
+            getline(inputFile, dep, ',');
+            depth[i]=stod(dep);
+            string dur;
+            getline(inputFile, dur, ',');
+            duration[i]=stod(dur);
+            string loc;
+            getline(inputFile, loc, ',');
+            location[i]=stod(loc);
         }
     }
 
@@ -94,7 +91,7 @@ void getInput(){
 
 double getError(int n, int i){
     double err;
-    err=pow((type[i][n]-a[L-1][n][i]),2);
+    err=pow((location[i]-a[L-1][n][i]),2);
     return err;
 }
 
@@ -154,17 +151,11 @@ void train() {
 
 void setPredict(){
     ofstream output;
-    output.open(R"(C:\Users\User\CLionProjects\Iris-Flower\prediction.txt)");
+    output.open(R"(C:\Users\User\CLionProjects\Exoplanet\prediction.txt)");
 
     for(int i=0;i<numInput;++i){
 
-        if(a[2][0][i] > a[2][1][i] && a[2][0][i] > a[2][2][i]){
-            predict[i]="Setosa";
-        }else if(a[2][1][i] > a[2][0][i] && a[2][1][i] > a[2][2][i]){
-            predict[i]="Versicolor";
-        }else if(a[2][2][i] > a[2][0][i] && a[2][2][i] > a[2][1][i]){
-            predict[i]="Virginica";
-        }
+        predict[i]=depth[i];
 
         output<<i+1<<": "<<predict[i]<<endl;
 
@@ -175,7 +166,7 @@ void setPredict(){
 
 void saveBias(){
     ofstream bias;
-    bias.open(R"(C:\Users\User\CLionProjects\Iris-Flower\bias.txt)");
+    bias.open(R"(C:\Users\User\CLionProjects\Exoplanet\bias.txt)");
 
     for(int l=1; l<L;++l){
         for(int n=0; n<N[l]; ++n){
@@ -194,7 +185,7 @@ void saveBias(){
 
 void saveWeights(){
     ofstream weights;
-    weights.open(R"(C:\Users\User\CLionProjects\Iris-Flower\weights.txt)");
+    weights.open(R"(C:\Users\User\CLionProjects\Exoplanet\weights.txt)");
 
     for (int l=1; l<L; ++l) {
         for (int n = 0; n < N[l]; ++n) {
@@ -215,7 +206,7 @@ void saveWeights(){
 
 void readBias(){
     ifstream biasIn;
-    biasIn.open(R"(C:\Users\User\CLionProjects\Iris-Flower\bias.txt)");
+    biasIn.open(R"(C:\Users\User\CLionProjects\Exoplanet\bias.txt)");
 
     while (biasIn.good()and !biasIn.eof()){
         for(int l=1; l<L;++l){
@@ -236,7 +227,7 @@ void readBias(){
 
 void readWeights(){
     ifstream weightsIn;
-    weightsIn.open(R"(C:\Users\User\CLionProjects\Iris-Flower\weights.txt)");
+    weightsIn.open(R"(C:\Users\User\CLionProjects\Exoplanet\weights.txt)");
 
     while (weightsIn.good()and !weightsIn.eof()){
         for (int l=1; l<L; ++l) {
@@ -258,8 +249,7 @@ void readWeights(){
 
 }
 
-int main(int argc, const char * argv[]) {
-
+void randBandW(){
     for(int l=0;l<20;++l){
         for(int n=0;n<1000;++n){
             for(int p=0;p<1000;++p){
@@ -270,6 +260,11 @@ int main(int argc, const char * argv[]) {
             setBias(l,n,setB);
         }
     };
+}
+
+int main(int argc, const char * argv[]) {
+
+    randBandW();
 
     getInput();
 
