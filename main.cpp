@@ -12,7 +12,7 @@ int L = 5;
 
 int numTrained = 100;
 
-int numInput = 500;
+int numInput = 5000;
 
 int N[]={20,10,5,3,1};
 
@@ -20,17 +20,19 @@ double w[20][1000][1000];
 
 double b[20][1000];
 
-double a[20][1000][500];
+double a[20][1000][5000];
 
-double Z[20][1000][500];
+double Z[20][1000][5000];
 
-double depth[500];
+double depth[5000];
 
-double duration[500];
+double duration[5000];
 
-double location[500];
+double location[5000];
 
-string predict[500];
+double predict[5000];
+
+double exo[5000];
 
 double S(double i){
     double out;
@@ -68,6 +70,7 @@ void getInput(){
     inputFile.open(R"(C:\Users\User\CLionProjects\Exoplanet\sample.txt)");
 
     while (inputFile.good()and !inputFile.eof()){
+
         for (int i=0; i<numInput; ++i) {
             for (int n = 0; n < N[0]; ++n) {
                 string in;
@@ -83,6 +86,13 @@ void getInput(){
             string loc;
             getline(inputFile, loc, ',');
             location[i]=stod(loc);
+
+            if(depth[i] > 0){
+                exo[i]=1;
+            }else{
+                exo[i]=0;
+            }
+
         }
     }
 
@@ -91,7 +101,7 @@ void getInput(){
 
 double getError(int n, int i){
     double err;
-    err=pow((location[i]-a[L-1][n][i]),2);
+    err=pow((exo[i]-a[L-1][n][i]),2);
     return err;
 }
 
@@ -119,7 +129,7 @@ void train() {
     int layer = 1 + rand() % (L - 1);
     int neuron = rand() % (N[layer]);
     int prevNeur = rand() % N[layer - 1];
-    double change = (((double(rand()) / RAND_MAX) * 2.0) - 1.0) * 0.1;
+    double change = (((double(rand()) / RAND_MAX) * 2.0) - 1.0) * 1;
 
     double prevWeight = w[layer][neuron][prevNeur];
     double prevBias = b[layer][neuron];
@@ -142,7 +152,7 @@ void train() {
 
     if(errBef<=errAft){
         setWeight(layer, neuron, prevNeur, prevWeight);
-        setBias(layer,neuron,prevBias);
+        setBias(layer, neuron, prevBias);
         //cout<<"Unchanged"<<endl;
     }else{
         //cout<<"Changed"<<endl;
@@ -153,11 +163,13 @@ void setPredict(){
     ofstream output;
     output.open(R"(C:\Users\User\CLionProjects\Exoplanet\prediction.txt)");
 
+    output<<"Index: Actual, Prediction"<<endl;
+
     for(int i=0;i<numInput;++i){
 
-        predict[i]=depth[i];
+        predict[i]=a[L-1][0][i];
 
-        output<<i+1<<": "<<predict[i]<<endl;
+        output<<i+1<<": "<<depth[i]<<", "<<predict[i]<<endl;
 
     }
     output.close();
@@ -268,8 +280,11 @@ int main(int argc, const char * argv[]) {
 
     getInput();
 
-    for(int i=0;i<100000;++i){
+    for(int i=0;i<10000000;++i){
         train();
+        if(i % 1000==0){
+            //cout<<i<<": "<<avgError()<<endl;
+        }
     }
 
     for(int i=0;i<numInput; ++i){
