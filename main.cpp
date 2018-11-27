@@ -8,13 +8,13 @@ using namespace std;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-int L = 5;
+int L = 4;
 
 int numTrained = 100;
 
 int numInput = 5000;
 
-int N[]={20,10,5,3,1};
+int N[]={20,10,5,2};
 
 double w[20][1000][1000];
 
@@ -32,7 +32,9 @@ double location[5000];
 
 double predict[5000];
 
-double exo[5000];
+double exo[5000][2];
+
+double normalDepth[5000];
 
 double S(double i){
     double out;
@@ -67,7 +69,7 @@ void activationLoop(int i){
 void getInput(){
 
     ifstream inputFile;
-    inputFile.open(R"(C:\Users\User\CLionProjects\Exoplanet\sample.txt)");
+    inputFile.open(R"(C:\Users\User\CLionProjects\Exoplanet\NormalSample.txt)");
 
     while (inputFile.good()and !inputFile.eof()){
 
@@ -77,20 +79,29 @@ void getInput(){
                 getline(inputFile, in, ',');
                 a[0][n][i]=stod(in);
             }
+
             string dep;
             getline(inputFile, dep, ',');
             depth[i]=stod(dep);
+
             string dur;
             getline(inputFile, dur, ',');
             duration[i]=stod(dur);
+
             string loc;
             getline(inputFile, loc, ',');
             location[i]=stod(loc);
 
-            if(depth[i] > 0){
-                exo[i]=1;
+            string nrm;
+            getline(inputFile, nrm, '\r');
+            normalDepth[i]=stod(nrm);
+
+            if(depth[i] == 0){
+                exo[i][0]=1;
+                exo[i][1]=0;
             }else{
-                exo[i]=0;
+                exo[i][0]=0;
+                exo[i][1]=1;
             }
 
         }
@@ -101,7 +112,7 @@ void getInput(){
 
 double getError(int n, int i){
     double err;
-    err=pow((exo[i]-a[L-1][n][i]),2);
+    err=pow((exo[i][n]-a[L-1][n][i]),2);
     return err;
 }
 
@@ -120,19 +131,19 @@ double avgError(){
     return avErr;
 }
 
-void train() {
-
-    for(int i=0; i<numTrained; ++i){
-        activationLoop(i);
-    }
+void train(double multiplier) {
 
     int layer = 1 + rand() % (L - 1);
     int neuron = rand() % (N[layer]);
     int prevNeur = rand() % N[layer - 1];
-    double change = (((double(rand()) / RAND_MAX) * 2.0) - 1.0) * 1;
+    double change = (((double(rand()) / RAND_MAX) * 2.0) - 1.0) * multiplier;
 
     double prevWeight = w[layer][neuron][prevNeur];
     double prevBias = b[layer][neuron];
+
+    for(int i=0;i<numTrained; ++i){
+        activationLoop(i);
+    }
 
     double errBef=avgError();
 
@@ -144,15 +155,20 @@ void train() {
         setBias(layer, neuron, prevBias + change);
     }
 
-    for(int i=0;i<numTrained;++i){
+    for(int i=0;i<numTrained; ++i){
         activationLoop(i);
     }
 
     double errAft=avgError();
 
+    //cout<<"Before: "<<errBef<<", After: "<<errAft<<endl;
+
     if(errBef<=errAft){
         setWeight(layer, neuron, prevNeur, prevWeight);
         setBias(layer, neuron, prevBias);
+        for(int i=0;i<numTrained; ++i){
+            activationLoop(i);
+        }
         //cout<<"Unchanged"<<endl;
     }else{
         //cout<<"Changed"<<endl;
@@ -163,13 +179,17 @@ void setPredict(){
     ofstream output;
     output.open(R"(C:\Users\User\CLionProjects\Exoplanet\prediction.txt)");
 
-    output<<"Index: Actual, Prediction"<<endl;
+    output<<"Index: Actual, Normalised, Neuron 1, Neuron 2, Prediction"<<endl;
 
     for(int i=0;i<numInput;++i){
 
-        predict[i]=a[L-1][0][i];
+        if (a[L-1][0][i]>a[L-1][1][i]){
+            predict[i]=0;
+        }else{
+            predict[i]=1;
+        }
 
-        output<<i+1<<": "<<depth[i]<<", "<<predict[i]<<endl;
+        output<<i+1<<": "<<depth[i]<<", "<<normalDepth[i]<<", "<<predict[i]<<endl;
 
     }
     output.close();
@@ -280,11 +300,27 @@ int main(int argc, const char * argv[]) {
 
     getInput();
 
-    for(int i=0;i<10000000;++i){
-        train();
-        if(i % 1000==0){
-            //cout<<i<<": "<<avgError()<<endl;
+    for(int i=0;i<numInput; ++i){
+        activationLoop(i);
+    }
+
+    for(int i=0;i<1000000;++i){
+        if(i % 10000==0){
+            cout<<i<<": "<<avgError()<<endl;
         }
+
+        if(i>0 && i<200000){
+            train(100);
+        }else if(i>=200000 && i<400000){
+            train(10);
+        }else if(i>=400000 && i<600000) {
+            train(1);
+        }else if(i>=600000 && i<800000) {
+            train(0.1);
+        }else if(i>=800000 && i<1000000) {
+            train(0.01);
+        }
+
     }
 
     for(int i=0;i<numInput; ++i){
