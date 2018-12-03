@@ -10,9 +10,11 @@ using namespace std;
 
 int L = 4;
 
-int numTrained = 100;
+int numTrained = 500;
 
 int numInput = 5000;
+
+double cutoff = 0.2;
 
 int N[]={20,10,5,2};
 
@@ -35,6 +37,14 @@ double predict[5000];
 double exo[5000][2];
 
 double normalDepth[5000];
+
+int falPos = 0;
+
+int falNeg = 0;
+
+int truPos = 0;
+
+int truNeg = 0;
 
 double S(double i){
     double out;
@@ -189,9 +199,12 @@ void setPredict(){
             predict[i]=1;
         }
 
-        output<<i+1<<": "<<depth[i]<<", "<<normalDepth[i]<<", "<<predict[i]<<endl;
+        output<<i+1<<": "<<depth[i]<<", "<<normalDepth[i]<<", "<<a[L-1][0][i]<<", "<<a[L-1][1][i]<<", "<<predict[i]<<endl;
 
     }
+
+    output<<"True Positives: "<<truPos<<endl<<"False Positives: "<<falPos<<endl<<"True Negatives: "<<truNeg<<endl<<"False Negatives: "<<falNeg<<endl;
+
     output.close();
 
 }
@@ -294,11 +307,33 @@ void randBandW(){
     };
 }
 
+void positiveTest(){
+
+    for (int i=0; i<numInput; ++i){
+        if (a[L-1][0][i]>a[L-1][1][i] && exo[i][0]==1){
+            truNeg = truNeg + 1;
+        }else if (a[L-1][0][i]>a[L-1][1][i] && exo[i][0]==0){
+            falNeg = falNeg + 1;
+        }else if (a[L-1][0][i]<a[L-1][1][i] && exo[i][1]==1){
+            truPos = truPos + 1;
+        }else if (a[L-1][0][i]<a[L-1][1][i] && exo[i][1]==0){
+            falPos = falPos + 1;
+        }else{
+            cout<<i+1<<": Equal!"<<endl;
+            truPos = truPos + 1;
+        }
+    }
+
+}
+
 int main(int argc, const char * argv[]) {
 
     randBandW();
 
     getInput();
+
+    /*readBias();
+    readWeights();*/
 
     for(int i=0;i<numInput; ++i){
         activationLoop(i);
@@ -326,6 +361,8 @@ int main(int argc, const char * argv[]) {
     for(int i=0;i<numInput; ++i){
         activationLoop(i);
     }
+
+    positiveTest();
 
     setPredict();
     saveWeights();
