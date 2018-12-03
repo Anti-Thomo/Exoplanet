@@ -14,9 +14,9 @@ int numTrained = 500;
 
 int numInput = 5000;
 
-double cutoff = 0.2;
+double cutoff = 0.7;
 
-int N[]={20,10,5,2};
+int N[]={20,10,5,1};
 
 double w[20][1000][1000];
 
@@ -34,7 +34,7 @@ double location[5000];
 
 double predict[5000];
 
-double exo[5000][2];
+double exo[5000];
 
 double normalDepth[5000];
 
@@ -107,11 +107,9 @@ void getInput(){
             normalDepth[i]=stod(nrm);
 
             if(depth[i] == 0){
-                exo[i][0]=1;
-                exo[i][1]=0;
+                exo[i]=0;
             }else{
-                exo[i][0]=0;
-                exo[i][1]=1;
+                exo[i]=1;
             }
 
         }
@@ -122,7 +120,7 @@ void getInput(){
 
 double getError(int n, int i){
     double err;
-    err=pow((exo[i][n]-a[L-1][n][i]),2);
+    err=pow((exo[i]-a[L-1][n][i]),2);
     return err;
 }
 
@@ -193,10 +191,10 @@ void setPredict(){
 
     for(int i=0;i<numInput;++i){
 
-        if (a[L-1][0][i]>a[L-1][1][i]){
-            predict[i]=0;
-        }else{
+        if (a[L-1][0][i]>cutoff){
             predict[i]=1;
+        }else{
+            predict[i]=0;
         }
 
         output<<i+1<<": "<<depth[i]<<", "<<normalDepth[i]<<", "<<a[L-1][0][i]<<", "<<a[L-1][1][i]<<", "<<predict[i]<<endl;
@@ -310,13 +308,13 @@ void randBandW(){
 void positiveTest(){
 
     for (int i=0; i<numInput; ++i){
-        if (a[L-1][0][i]>a[L-1][1][i] && exo[i][0]==1){
+        if (a[L-1][0][i]<=cutoff && exo[i]==0){
             truNeg = truNeg + 1;
-        }else if (a[L-1][0][i]>a[L-1][1][i] && exo[i][0]==0){
+        }else if (a[L-1][0][i]<=cutoff && exo[i]==1){
             falNeg = falNeg + 1;
-        }else if (a[L-1][0][i]<a[L-1][1][i] && exo[i][1]==1){
+        }else if (a[L-1][0][i]>cutoff && exo[i]==1){
             truPos = truPos + 1;
-        }else if (a[L-1][0][i]<a[L-1][1][i] && exo[i][1]==0){
+        }else if (a[L-1][0][i]>cutoff && exo[i]==0){
             falPos = falPos + 1;
         }else{
             cout<<i+1<<": Equal!"<<endl;
@@ -339,20 +337,20 @@ int main(int argc, const char * argv[]) {
         activationLoop(i);
     }
 
-    for(int i=0;i<1000000;++i){
+    for(int i=0;i<100000;++i){
         if(i % 10000==0){
             cout<<i<<": "<<avgError()<<endl;
         }
 
-        if(i>0 && i<200000){
+        if(i>0 && i<20000){
             train(100);
-        }else if(i>=200000 && i<400000){
+        }else if(i>=20000 && i<40000){
             train(10);
-        }else if(i>=400000 && i<600000) {
+        }else if(i>=40000 && i<60000) {
             train(1);
-        }else if(i>=600000 && i<800000) {
+        }else if(i>=60000 && i<80000) {
             train(0.1);
-        }else if(i>=800000 && i<1000000) {
+        }else if(i>=80000 && i<100000) {
             train(0.01);
         }
 
