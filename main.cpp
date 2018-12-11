@@ -8,15 +8,15 @@ using namespace std;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-int L = 4;
+int L = 3;
 
 int numTrained = 500;
 
 int numInput = 5000;
 
-double cutoff = 0.7;
+double cutoff = 0.56;
 
-int N[]={20,10,5,1};
+int N[]={20,10,1};
 
 double w[20][1000][1000];
 
@@ -46,6 +46,8 @@ int truPos = 0;
 
 int truNeg = 0;
 
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
 double S(double i){
     double out;
     out=1/(1+exp(-i));
@@ -72,9 +74,6 @@ void activationLoop(int i){
         }
     }
 };
-
-/////////////////////////////////////////////////////////////////////////////////////////////////
-
 
 void getInput(){
 
@@ -338,7 +337,7 @@ int main(int argc, const char * argv[]) {
     }
 
     for(int i=0;i<100000;++i){
-        if(i % 10000==0){
+        if(i % 1000==0){
             cout<<i<<": "<<avgError()<<endl;
         }
 
